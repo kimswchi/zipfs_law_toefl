@@ -1,73 +1,15 @@
----
-title: "toefl_zipfs.Rmd"
-author: "Soo Wan Kim"
-date: "November 27, 2017"
-output:
-  html_document:
-    code_folding: hide
-    keep_md: true
----
+# toefl_zipfs.Rmd
+Soo Wan Kim  
+November 27, 2017  
 
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
-library(tidyverse)
-library(feather)
-library("hunspell")
-library(openNLP)
-library(NLP)
 
-new_data <- read_feather("essay_word_counts_clean.feather")
-set.seed(1234)
-theme_set(theme_bw())
-```
 
-```{r clean data, include=FALSE, cache = TRUE, eval=FALSE}
-#read in original toefl data
-toe <- read_feather("essay_word_counts.feather")
-metadata <- read.csv("merged_metadata.csv")
-toe <- merge(toe, metadata, by = "essay_id")
-
-#remove non-alphanumeric observations and find misspelled words
-toe_all <- toe %>%
-  select(essay_id, word, count, L1_code) %>%
-  transform(L1_code = as.character(L1_code)) %>%
-  mutate(word2 = word) %>%
-  #remove punctuation marks
-  transform(word2 = gsub("[^[:alnum:]]", "", word2)) %>%
-  #remove blanks
-  filter(word2 != "") %>%
-  #determine if word is correctly spelled according to hunspell
-  mutate(check = hunspell_check(word2))
-
-#separate observations based on spellcheck
-toe_all_t <- filter(toe_all, check == "TRUE")
-toe_all_f <- filter(toe_all, check == "FALSE")
-
-#for each ostensible misspelling, replace it with the first item in the 
-#list of suggested spellings generated using hunspell_suggest()
-toe_all_f <- toe_all_f %>%
-  mutate(sugg = hunspell_suggest(word2))
-toe_all_f$word2 <- sapply(toe_all_f$sugg, function(x) x[1])
-toe_all_f <- na.omit(toe_all_f) %>%
-  select(-sugg)
-
-#put data back together
-new_data <- rbind(toe_all_t, toe_all_f) %>%
-  arrange(L1_code)
-new_data$word <- new_data$word2
-new_data <- new_data %>%
-  select(-check, -word2) %>%
-  group_by(essay_id, word, L1_code) %>%
-  summarize(freq = sum(count))
-
-#cleaned data
-write_feather(new_data, "essay_word_counts_clean.feather")
-```
 
 ### Word frequency distribution using entire corpus for both frequency and frequency rank calculations
 
-```{r word frequencies no split}
+
+```r
 lang_list <- unique(new_data$L1_code)
 
 rank <- function(lang_code) {
@@ -102,11 +44,14 @@ ggplot(ranked) +
   labs(title = "All words, entire corpus (no split)")
 ```
 
+![](toefl_zipfs_files/figure-html/word frequencies no split-1.png)<!-- -->
+
 ### Word frequency distribution with split corpus for frequency and frequency rank calculations
 
 To mimic using two independent corpora for the frequency and frequency rank calculations (to avoid spurious correlation), I split the corpus into two subcorpora via a binomial split.
 
-```{r functions}
+
+```r
 #for splitting corpus into two independent corpora for calculating frequency and frequency rank
 split <- function(data) {
   data$freq_n <- sapply(data$freq, function(x) rbinom(n = 1, size = x, prob = 0.5))
@@ -173,7 +118,8 @@ logrank_compile <- function(data) {
 }
 ```
 
-```{r word frequencies with split}
+
+```r
 #split corpus
 word_freq_all <- split(new_data)
 
@@ -192,9 +138,12 @@ ggplot(log_data_all) +
   labs(title = "All words, split corpus")
 ```
 
+![](toefl_zipfs_files/figure-html/word frequencies with split-1.png)<!-- -->
+
 ### Frequency distributions for different parts of speech
 
-```{r tag parts of speech, cache=TRUE}
+
+```r
 #unique list of words in string form
 words <- as.String(unique(new_data$word))
 
@@ -232,7 +181,8 @@ nouns <- unique(subset(tgdf, tags %in% c("NN", "NNS", "NNP", "NNPS"))$word)
 verbs <- unique(subset(tgdf, tags %in% c("VB", "VBD", "VBG", "VBN", "VBP", "VBZ"))$word)
 ```
 
-```{r nouns only}
+
+```r
 nouns_data <- new_data %>%
   filter(word %in% nouns)
 
@@ -254,7 +204,10 @@ ggplot(log_data_noun) +
   labs(title = "Nouns")
 ```
 
-```{r verbs only}
+![](toefl_zipfs_files/figure-html/nouns only-1.png)<!-- -->
+
+
+```r
 verbs_data <- new_data %>%
   filter(word %in% verbs)
 
@@ -275,3 +228,5 @@ ggplot(log_data_verb) +
   geom_smooth(aes(logrank, logfreq, color = L1_code)) + 
   labs(title = "Verbs")
 ```
+
+![](toefl_zipfs_files/figure-html/verbs only-1.png)<!-- -->
