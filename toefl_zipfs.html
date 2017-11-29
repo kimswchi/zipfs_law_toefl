@@ -141,6 +141,57 @@ $(document).ready(function () {
 </div>
 
 
+<pre class="r"><code>knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+library(tidyverse)
+library(feather)
+library(&quot;hunspell&quot;)
+library(openNLP)
+library(NLP)
+
+new_data &lt;- read_feather(&quot;essay_word_counts_clean.feather&quot;)
+set.seed(1234)
+theme_set(theme_bw())</code></pre>
+<pre class="r"><code>#read in original toefl data
+toe &lt;- read_feather(&quot;essay_word_counts.feather&quot;)
+metadata &lt;- read.csv(&quot;merged_metadata.csv&quot;)
+toe &lt;- merge(toe, metadata, by = &quot;essay_id&quot;)
+
+#remove non-alphanumeric observations and find misspelled words
+toe_all &lt;- toe %&gt;%
+  select(essay_id, word, count, L1_code) %&gt;%
+  transform(L1_code = as.character(L1_code)) %&gt;%
+  mutate(word2 = word) %&gt;%
+  #remove punctuation marks
+  transform(word2 = gsub(&quot;[^[:alnum:]]&quot;, &quot;&quot;, word2)) %&gt;%
+  #remove blanks
+  filter(word2 != &quot;&quot;) %&gt;%
+  #determine if word is correctly spelled according to hunspell
+  mutate(check = hunspell_check(word2))
+
+#separate observations based on spellcheck
+toe_all_t &lt;- filter(toe_all, check == &quot;TRUE&quot;)
+toe_all_f &lt;- filter(toe_all, check == &quot;FALSE&quot;)
+
+#for each ostensible misspelling, replace it with the first item in the 
+#list of suggested spellings generated using hunspell_suggest()
+toe_all_f &lt;- toe_all_f %&gt;%
+  mutate(sugg = hunspell_suggest(word2))
+toe_all_f$word2 &lt;- sapply(toe_all_f$sugg, function(x) x[1])
+toe_all_f &lt;- na.omit(toe_all_f) %&gt;%
+  select(-sugg)
+
+#put data back together
+new_data &lt;- rbind(toe_all_t, toe_all_f) %&gt;%
+  arrange(L1_code)
+new_data$word &lt;- new_data$word2
+new_data &lt;- new_data %&gt;%
+  select(-check, -word2) %&gt;%
+  group_by(essay_id, word, L1_code) %&gt;%
+  summarize(freq = sum(count))
+
+#cleaned data
+write_feather(new_data, &quot;essay_word_counts_clean.feather&quot;)</code></pre>
 <div id="word-frequency-distribution-using-entire-corpus-for-both-frequency-and-frequency-rank-calculations" class="section level3">
 <h3>Word frequency distribution using entire corpus for both frequency and frequency rank calculations</h3>
 <pre class="r"><code>lang_list &lt;- unique(new_data$L1_code)

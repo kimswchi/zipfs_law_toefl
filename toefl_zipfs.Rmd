@@ -8,7 +8,7 @@ output:
     keep_md: true
 ---
 
-```{r setup, include = FALSE}
+```{r setup, message = FALSE, warning = FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
 library(tidyverse)
@@ -22,7 +22,7 @@ set.seed(1234)
 theme_set(theme_bw())
 ```
 
-```{r clean data, include=FALSE, cache = TRUE, eval=FALSE}
+```{r clean data, cache = TRUE, eval=FALSE}
 #read in original toefl data
 toe <- read_feather("essay_word_counts.feather")
 metadata <- read.csv("merged_metadata.csv")

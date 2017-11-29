@@ -3,8 +3,63 @@ Soo Wan Kim
 November 27, 2017  
 
 
+```r
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+library(tidyverse)
+library(feather)
+library("hunspell")
+library(openNLP)
+library(NLP)
+
+new_data <- read_feather("essay_word_counts_clean.feather")
+set.seed(1234)
+theme_set(theme_bw())
+```
 
 
+```r
+#read in original toefl data
+toe <- read_feather("essay_word_counts.feather")
+metadata <- read.csv("merged_metadata.csv")
+toe <- merge(toe, metadata, by = "essay_id")
+
+#remove non-alphanumeric observations and find misspelled words
+toe_all <- toe %>%
+  select(essay_id, word, count, L1_code) %>%
+  transform(L1_code = as.character(L1_code)) %>%
+  mutate(word2 = word) %>%
+  #remove punctuation marks
+  transform(word2 = gsub("[^[:alnum:]]", "", word2)) %>%
+  #remove blanks
+  filter(word2 != "") %>%
+  #determine if word is correctly spelled according to hunspell
+  mutate(check = hunspell_check(word2))
+
+#separate observations based on spellcheck
+toe_all_t <- filter(toe_all, check == "TRUE")
+toe_all_f <- filter(toe_all, check == "FALSE")
+
+#for each ostensible misspelling, replace it with the first item in the 
+#list of suggested spellings generated using hunspell_suggest()
+toe_all_f <- toe_all_f %>%
+  mutate(sugg = hunspell_suggest(word2))
+toe_all_f$word2 <- sapply(toe_all_f$sugg, function(x) x[1])
+toe_all_f <- na.omit(toe_all_f) %>%
+  select(-sugg)
+
+#put data back together
+new_data <- rbind(toe_all_t, toe_all_f) %>%
+  arrange(L1_code)
+new_data$word <- new_data$word2
+new_data <- new_data %>%
+  select(-check, -word2) %>%
+  group_by(essay_id, word, L1_code) %>%
+  summarize(freq = sum(count))
+
+#cleaned data
+write_feather(new_data, "essay_word_counts_clean.feather")
+```
 
 ### Word frequency distribution using entire corpus for both frequency and frequency rank calculations
 
