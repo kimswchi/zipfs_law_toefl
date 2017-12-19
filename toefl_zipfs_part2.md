@@ -4,7 +4,7 @@ December 18, 2017
 
 
 ```r
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, cache = TRUE)
 
 library(tidyverse)
 library(feather)
@@ -43,6 +43,8 @@ coefs <- coef(eqfit)
 p <- coefs[[1]]
 b <- coefs[[2]]
 a <- coefs[[3]]
+
+
 
 #create predicted values for log frequency
 new_freq_data2 <- new_freq_data %>%
@@ -150,7 +152,7 @@ ggplot(zipf_loess_est) +
   facet_wrap(~L1_code)
 ```
 
-![](toefl_zipfs_part2_files/figure-html/graphs for each language code-1.png)<!-- -->
+<img src="toefl_zipfs_part2_files/figure-html/graphs for each language code-1.png" width="120%" />
 
 ```r
 #plot log frequencies and residuals
@@ -163,7 +165,7 @@ ggplot(data = zipf_loess_est, mapping = aes(x = logfreq, y = logfreqresidz)) +
   facet_wrap(~L1_code)
 ```
 
-![](toefl_zipfs_part2_files/figure-html/graphs for each language code-2.png)<!-- -->
+<img src="toefl_zipfs_part2_files/figure-html/graphs for each language code-2.png" width="120%" />
 
 #### Zipfian distribution parameter estimates
 
