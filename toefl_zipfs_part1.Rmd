@@ -107,6 +107,8 @@ ggplot(ranked) +
 To mimic using two independent corpora for the frequency and frequency rank calculations (to avoid spurious correlation), I split the corpus into two subcorpora via a binomial split.
 
 ```{r functions}
+lang_list <- unique(new_data$L1_code)
+
 #for splitting corpus into two independent corpora for calculating frequency and frequency rank
 split <- function(data) {
   data$freq_n <- sapply(data$freq, function(x) rbinom(n = 1, size = x, prob = 0.5))
@@ -275,3 +277,9 @@ ggplot(log_data_verb) +
   geom_smooth(aes(logrank, logfreq, color = L1_code)) + 
   labs(title = "Verbs")
 ```
+
+```{r export data}
+new_freq_data <- log_data_all[-5]
+write_feather(new_freq_data, "essay_word_counts_clean_freq.feather")
+```
+

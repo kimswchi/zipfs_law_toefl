@@ -99,7 +99,7 @@ ggplot(ranked) +
   labs(title = "All words, entire corpus (no split)")
 ```
 
-![](toefl_zipfs_files/figure-html/word frequencies no split-1.png)<!-- -->
+![](toefl_zipfs_part1_files/figure-html/word frequencies no split-1.png)<!-- -->
 
 ### Word frequency distribution with split corpus for frequency and frequency rank calculations
 
@@ -107,6 +107,8 @@ To mimic using two independent corpora for the frequency and frequency rank calc
 
 
 ```r
+lang_list <- unique(new_data$L1_code)
+
 #for splitting corpus into two independent corpora for calculating frequency and frequency rank
 split <- function(data) {
   data$freq_n <- sapply(data$freq, function(x) rbinom(n = 1, size = x, prob = 0.5))
@@ -193,7 +195,7 @@ ggplot(log_data_all) +
   labs(title = "All words, split corpus")
 ```
 
-![](toefl_zipfs_files/figure-html/word frequencies with split-1.png)<!-- -->
+![](toefl_zipfs_part1_files/figure-html/word frequencies with split-1.png)<!-- -->
 
 ### Frequency distributions for different parts of speech
 
@@ -259,7 +261,7 @@ ggplot(log_data_noun) +
   labs(title = "Nouns")
 ```
 
-![](toefl_zipfs_files/figure-html/nouns only-1.png)<!-- -->
+![](toefl_zipfs_part1_files/figure-html/nouns only-1.png)<!-- -->
 
 
 ```r
@@ -284,4 +286,11 @@ ggplot(log_data_verb) +
   labs(title = "Verbs")
 ```
 
-![](toefl_zipfs_files/figure-html/verbs only-1.png)<!-- -->
+![](toefl_zipfs_part1_files/figure-html/verbs only-1.png)<!-- -->
+
+
+```r
+new_freq_data <- log_data_all[-5]
+write_feather(new_freq_data, "essay_word_counts_clean_freq.feather")
+```
+
