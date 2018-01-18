@@ -171,8 +171,6 @@ p &lt;- coefs[[1]]
 b &lt;- coefs[[2]]
 a &lt;- coefs[[3]]
 
-
-
 #create predicted values for log frequency
 new_freq_data2 &lt;- new_freq_data %&gt;%
   mutate(logfreqpred = log(p *(1/(rank + b)^a)))
@@ -277,7 +275,8 @@ ggplot(data = zipf_loess_est, mapping = aes(x = logfreq, y = logfreqresidz)) +
   select(L1_code, p, b, a) %&gt;%
   unique() %&gt;%
   transform(b = round(b, 2)) %&gt;%
-  transform(a = round(a, 2))
+  transform(a = round(a, 2)) %&gt;%
+  arrange(desc(b))
 
 rownames(zipf_param) &lt;- NULL
 
@@ -301,62 +300,6 @@ alpha
 </tr>
 </thead>
 <tbody>
-<tr>
-<td style="text-align:left;">
-CHI
-</td>
-<td style="text-align:left;">
-24056.43
-</td>
-<td style="text-align:left;">
-1.79
-</td>
-<td style="text-align:left;">
-0.96
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-GER
-</td>
-<td style="text-align:left;">
-45494.88
-</td>
-<td style="text-align:left;">
-3.67
-</td>
-<td style="text-align:left;">
-1.09
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ARA
-</td>
-<td style="text-align:left;">
-33391.43
-</td>
-<td style="text-align:left;">
-3.23
-</td>
-<td style="text-align:left;">
-1.06
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-TEL
-</td>
-<td style="text-align:left;">
-20537.65
-</td>
-<td style="text-align:left;">
-1.09
-</td>
-<td style="text-align:left;">
-0.93
-</td>
-</tr>
 <tr>
 <td style="text-align:left;">
 JPN
@@ -387,44 +330,16 @@ KOR
 </tr>
 <tr>
 <td style="text-align:left;">
-FRE
+GER
 </td>
 <td style="text-align:left;">
-41541.33
+45494.88
 </td>
 <td style="text-align:left;">
-3.45
+3.67
 </td>
 <td style="text-align:left;">
 1.09
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-HIN
-</td>
-<td style="text-align:left;">
-31072.39
-</td>
-<td style="text-align:left;">
-2.11
-</td>
-<td style="text-align:left;">
-1.02
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-TUR
-</td>
-<td style="text-align:left;">
-29694.38
-</td>
-<td style="text-align:left;">
-2.54
-</td>
-<td style="text-align:left;">
-1.01
 </td>
 </tr>
 <tr>
@@ -443,6 +358,34 @@ ITA
 </tr>
 <tr>
 <td style="text-align:left;">
+FRE
+</td>
+<td style="text-align:left;">
+41541.33
+</td>
+<td style="text-align:left;">
+3.45
+</td>
+<td style="text-align:left;">
+1.09
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ARA
+</td>
+<td style="text-align:left;">
+33391.43
+</td>
+<td style="text-align:left;">
+3.23
+</td>
+<td style="text-align:left;">
+1.06
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
 SPA
 </td>
 <td style="text-align:left;">
@@ -455,6 +398,62 @@ SPA
 1.08
 </td>
 </tr>
+<tr>
+<td style="text-align:left;">
+TUR
+</td>
+<td style="text-align:left;">
+29694.38
+</td>
+<td style="text-align:left;">
+2.54
+</td>
+<td style="text-align:left;">
+1.01
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+HIN
+</td>
+<td style="text-align:left;">
+31072.39
+</td>
+<td style="text-align:left;">
+2.11
+</td>
+<td style="text-align:left;">
+1.02
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+CHI
+</td>
+<td style="text-align:left;">
+24056.43
+</td>
+<td style="text-align:left;">
+1.79
+</td>
+<td style="text-align:left;">
+0.96
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+TEL
+</td>
+<td style="text-align:left;">
+20537.65
+</td>
+<td style="text-align:left;">
+1.09
+</td>
+<td style="text-align:left;">
+0.93
+</td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -464,19 +463,19 @@ SPA
 <pre class="r"><code>zipf_loess_est_sum &lt;- zipf_loess_est %&gt;%
   select(L1_code, logfreqpredz, loess_est50)
 
-library(Hmisc)
-
 #function to calculate correlations and correlation p-value using Pearson test
 
 get_corr &lt;- function(lang_code) {
   data &lt;- subset(zipf_loess_est_sum, L1_code == lang_code)
   data2 &lt;- select(data, -L1_code)
   x &lt;- as.matrix(data2)
-  c &lt;- rcorr(x, type = &quot;pearson&quot;)
-  cor_val &lt;- round(c$r[2], 4)
-  cor_p &lt;- c$P[2]
-  row &lt;- as.data.frame(t(c(lang_code, cor_val, cor_p)))
-  names(row) &lt;- c(&quot;L1_code&quot;, &quot;cor_val&quot;, &quot;cor_p&quot;)
+  c &lt;- cor.test(x[,1], x[,2], method = &quot;pearson&quot;, conf.level = 0.95)
+  cor_val &lt;- round(c$estimate[[1]], 4)
+  cor_CI &lt;- c$conf.int
+  cor_CI_lower &lt;- round(cor_CI[1], 4)
+  cor_CI_upper &lt;- round(cor_CI[2], 4)
+  row &lt;- as.data.frame(t(c(lang_code, cor_val, cor_CI_lower, cor_CI_upper)))
+  names(row) &lt;- c(&quot;L1_code&quot;, &quot;cor_val&quot;, &quot;cor_CI_lower&quot;, &quot;cor_CI_upper&quot;)
   rownames(row) &lt;- NULL
   row
 }
@@ -485,15 +484,26 @@ get_corr &lt;- function(lang_code) {
 
 zipf_loess_cor &lt;- data.frame(L1_code=character(), #initalize dataframe
                             cor_val=numeric(),
-                            cor_p=numeric())
+                            cor_CI_lower=numeric(),
+                            cor_CI_upper=numeric())
 
 for(i in seq_along(lang_list)) {
   lang &lt;- lang_list[i]
-  zipf_loess_cor &lt;- rbind(zipf_loess_cor, get_corr(lang))
+  zipf_loess_cor &lt;- rbind(zipf_loess_cor, get_corr(lang)) %&gt;%
+    transform(cor_val = as.numeric(as.character(cor_val))) %&gt;%
+    transform(cor_CI_lower = as.numeric(as.character(cor_CI_lower))) %&gt;%
+    transform(cor_CI_upper = as.numeric(as.character(cor_CI_upper))) %&gt;%
+    arrange(desc(cor_val))
 }
 
+#re-order factor levels for language code, for graphing purposes
+zipf_loess_cor$L1_code &lt;- factor(zipf_loess_cor$L1_code, levels = zipf_loess_cor$L1_code)
+
+#correlations table
 zipf_loess_cor %&gt;%
-  kable(format = &quot;html&quot;, col.names = c(&quot;L1_code&quot;, &quot;Pearson coefficient&quot;, &quot;P-value&quot;), align = 'l', table.attr = &quot;style='width:70%;'&quot;)</code></pre>
+  mutate(cor_CI = paste0(&quot;(&quot;, cor_CI_lower, &quot;, &quot;, cor_CI_upper, &quot;)&quot;)) %&gt;%
+  select(-cor_CI_lower, -cor_CI_upper) %&gt;%
+  kable(format = &quot;html&quot;, col.names = c(&quot;L1_code&quot;, &quot;Pearson coefficient&quot;, &quot;95% Conf. Interval&quot;), align = 'l', table.attr = &quot;style='width:70%;'&quot;)</code></pre>
 <table style="width:70%;">
 <thead>
 <tr>
@@ -504,97 +514,20 @@ L1_code
 Pearson coefficient
 </th>
 <th style="text-align:left;">
-P-value
+95% Conf. Interval
 </th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td style="text-align:left;">
-CHI
-</td>
-<td style="text-align:left;">
-0.9387
-</td>
-<td style="text-align:left;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
 GER
 </td>
 <td style="text-align:left;">
-0.941
+0.9410
 </td>
 <td style="text-align:left;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-ARA
-</td>
-<td style="text-align:left;">
-0.9164
-</td>
-<td style="text-align:left;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-TEL
-</td>
-<td style="text-align:left;">
-0.9312
-</td>
-<td style="text-align:left;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-JPN
-</td>
-<td style="text-align:left;">
-0.9338
-</td>
-<td style="text-align:left;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-KOR
-</td>
-<td style="text-align:left;">
-0.9348
-</td>
-<td style="text-align:left;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-FRE
-</td>
-<td style="text-align:left;">
-0.9346
-</td>
-<td style="text-align:left;">
-0
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-HIN
-</td>
-<td style="text-align:left;">
-0.9359
-</td>
-<td style="text-align:left;">
-0
+(0.9387, 0.9432)
 </td>
 </tr>
 <tr>
@@ -605,7 +538,40 @@ TUR
 0.9402
 </td>
 <td style="text-align:left;">
-0
+(0.9379, 0.9425)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+CHI
+</td>
+<td style="text-align:left;">
+0.9387
+</td>
+<td style="text-align:left;">
+(0.9363, 0.941)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+HIN
+</td>
+<td style="text-align:left;">
+0.9359
+</td>
+<td style="text-align:left;">
+(0.9336, 0.938)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+KOR
+</td>
+<td style="text-align:left;">
+0.9348
+</td>
+<td style="text-align:left;">
+(0.9322, 0.9373)
 </td>
 </tr>
 <tr>
@@ -616,7 +582,7 @@ ITA
 0.9347
 </td>
 <td style="text-align:left;">
-0
+(0.9321, 0.9373)
 </td>
 </tr>
 <tr>
@@ -627,11 +593,62 @@ SPA
 0.9347
 </td>
 <td style="text-align:left;">
-0
+(0.9322, 0.9371)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+FRE
+</td>
+<td style="text-align:left;">
+0.9346
+</td>
+<td style="text-align:left;">
+(0.9321, 0.9371)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+JPN
+</td>
+<td style="text-align:left;">
+0.9338
+</td>
+<td style="text-align:left;">
+(0.9311, 0.9365)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+TEL
+</td>
+<td style="text-align:left;">
+0.9312
+</td>
+<td style="text-align:left;">
+(0.9287, 0.9336)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ARA
+</td>
+<td style="text-align:left;">
+0.9164
+</td>
+<td style="text-align:left;">
+(0.9132, 0.9195)
 </td>
 </tr>
 </tbody>
 </table>
+<pre class="r"><code>#correlations plot
+ggplot(zipf_loess_cor) +
+  labs(title = &quot;Pearson coefficients for Zipf and loess estimates with 95% CIs&quot;,
+       x = &quot;Language code&quot;, y = &quot;Correlation&quot;) + 
+  geom_point(aes(L1_code, cor_val)) + 
+  geom_segment(aes(x = L1_code, y = cor_CI_lower, xend = L1_code, yend = cor_CI_upper), color = &quot;#6495ed&quot;)</code></pre>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
 </div>
 
 

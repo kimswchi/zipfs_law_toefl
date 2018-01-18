@@ -44,8 +44,6 @@ p <- coefs[[1]]
 b <- coefs[[2]]
 a <- coefs[[3]]
 
-
-
 #create predicted values for log frequency
 new_freq_data2 <- new_freq_data %>%
   mutate(logfreqpred = log(p *(1/(rank + b)^a)))
@@ -175,7 +173,8 @@ zipf_param <- zipf_loess_est %>%
   select(L1_code, p, b, a) %>%
   unique() %>%
   transform(b = round(b, 2)) %>%
-  transform(a = round(a, 2))
+  transform(a = round(a, 2)) %>%
+  arrange(desc(b))
 
 rownames(zipf_param) <- NULL
 
@@ -194,30 +193,6 @@ zipf_param %>%
  </thead>
 <tbody>
   <tr>
-   <td style="text-align:left;"> CHI </td>
-   <td style="text-align:left;"> 24056.43 </td>
-   <td style="text-align:left;"> 1.79 </td>
-   <td style="text-align:left;"> 0.96 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> GER </td>
-   <td style="text-align:left;"> 45494.88 </td>
-   <td style="text-align:left;"> 3.67 </td>
-   <td style="text-align:left;"> 1.09 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> ARA </td>
-   <td style="text-align:left;"> 33391.43 </td>
-   <td style="text-align:left;"> 3.23 </td>
-   <td style="text-align:left;"> 1.06 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> TEL </td>
-   <td style="text-align:left;"> 20537.65 </td>
-   <td style="text-align:left;"> 1.09 </td>
-   <td style="text-align:left;"> 0.93 </td>
-  </tr>
-  <tr>
    <td style="text-align:left;"> JPN </td>
    <td style="text-align:left;"> 41789.82 </td>
    <td style="text-align:left;"> 4.66 </td>
@@ -230,22 +205,10 @@ zipf_param %>%
    <td style="text-align:left;"> 1.09 </td>
   </tr>
   <tr>
-   <td style="text-align:left;"> FRE </td>
-   <td style="text-align:left;"> 41541.33 </td>
-   <td style="text-align:left;"> 3.45 </td>
+   <td style="text-align:left;"> GER </td>
+   <td style="text-align:left;"> 45494.88 </td>
+   <td style="text-align:left;"> 3.67 </td>
    <td style="text-align:left;"> 1.09 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> HIN </td>
-   <td style="text-align:left;"> 31072.39 </td>
-   <td style="text-align:left;"> 2.11 </td>
-   <td style="text-align:left;"> 1.02 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> TUR </td>
-   <td style="text-align:left;"> 29694.38 </td>
-   <td style="text-align:left;"> 2.54 </td>
-   <td style="text-align:left;"> 1.01 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> ITA </td>
@@ -254,10 +217,46 @@ zipf_param %>%
    <td style="text-align:left;"> 1.12 </td>
   </tr>
   <tr>
+   <td style="text-align:left;"> FRE </td>
+   <td style="text-align:left;"> 41541.33 </td>
+   <td style="text-align:left;"> 3.45 </td>
+   <td style="text-align:left;"> 1.09 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ARA </td>
+   <td style="text-align:left;"> 33391.43 </td>
+   <td style="text-align:left;"> 3.23 </td>
+   <td style="text-align:left;"> 1.06 </td>
+  </tr>
+  <tr>
    <td style="text-align:left;"> SPA </td>
    <td style="text-align:left;"> 41180.60 </td>
    <td style="text-align:left;"> 3.11 </td>
    <td style="text-align:left;"> 1.08 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> TUR </td>
+   <td style="text-align:left;"> 29694.38 </td>
+   <td style="text-align:left;"> 2.54 </td>
+   <td style="text-align:left;"> 1.01 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> HIN </td>
+   <td style="text-align:left;"> 31072.39 </td>
+   <td style="text-align:left;"> 2.11 </td>
+   <td style="text-align:left;"> 1.02 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> CHI </td>
+   <td style="text-align:left;"> 24056.43 </td>
+   <td style="text-align:left;"> 1.79 </td>
+   <td style="text-align:left;"> 0.96 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> TEL </td>
+   <td style="text-align:left;"> 20537.65 </td>
+   <td style="text-align:left;"> 1.09 </td>
+   <td style="text-align:left;"> 0.93 </td>
   </tr>
 </tbody>
 </table>
@@ -269,19 +268,19 @@ zipf_param %>%
 zipf_loess_est_sum <- zipf_loess_est %>%
   select(L1_code, logfreqpredz, loess_est50)
 
-library(Hmisc)
-
 #function to calculate correlations and correlation p-value using Pearson test
 
 get_corr <- function(lang_code) {
   data <- subset(zipf_loess_est_sum, L1_code == lang_code)
   data2 <- select(data, -L1_code)
   x <- as.matrix(data2)
-  c <- rcorr(x, type = "pearson")
-  cor_val <- round(c$r[2], 4)
-  cor_p <- c$P[2]
-  row <- as.data.frame(t(c(lang_code, cor_val, cor_p)))
-  names(row) <- c("L1_code", "cor_val", "cor_p")
+  c <- cor.test(x[,1], x[,2], method = "pearson", conf.level = 0.95)
+  cor_val <- round(c$estimate[[1]], 4)
+  cor_CI <- c$conf.int
+  cor_CI_lower <- round(cor_CI[1], 4)
+  cor_CI_upper <- round(cor_CI[2], 4)
+  row <- as.data.frame(t(c(lang_code, cor_val, cor_CI_lower, cor_CI_upper)))
+  names(row) <- c("L1_code", "cor_val", "cor_CI_lower", "cor_CI_upper")
   rownames(row) <- NULL
   row
 }
@@ -290,15 +289,26 @@ get_corr <- function(lang_code) {
 
 zipf_loess_cor <- data.frame(L1_code=character(), #initalize dataframe
                             cor_val=numeric(),
-                            cor_p=numeric())
+                            cor_CI_lower=numeric(),
+                            cor_CI_upper=numeric())
 
 for(i in seq_along(lang_list)) {
   lang <- lang_list[i]
-  zipf_loess_cor <- rbind(zipf_loess_cor, get_corr(lang))
+  zipf_loess_cor <- rbind(zipf_loess_cor, get_corr(lang)) %>%
+    transform(cor_val = as.numeric(as.character(cor_val))) %>%
+    transform(cor_CI_lower = as.numeric(as.character(cor_CI_lower))) %>%
+    transform(cor_CI_upper = as.numeric(as.character(cor_CI_upper))) %>%
+    arrange(desc(cor_val))
 }
 
+#re-order factor levels for language code, for graphing purposes
+zipf_loess_cor$L1_code <- factor(zipf_loess_cor$L1_code, levels = zipf_loess_cor$L1_code)
+
+#correlations table
 zipf_loess_cor %>%
-  kable(format = "html", col.names = c("L1_code", "Pearson coefficient", "P-value"), align = 'l', table.attr = "style='width:70%;'")
+  mutate(cor_CI = paste0("(", cor_CI_lower, ", ", cor_CI_upper, ")")) %>%
+  select(-cor_CI_lower, -cor_CI_upper) %>%
+  kable(format = "html", col.names = c("L1_code", "Pearson coefficient", "95% Conf. Interval"), align = 'l', table.attr = "style='width:70%;'")
 ```
 
 <table style='width:70%;'>
@@ -306,65 +316,76 @@ zipf_loess_cor %>%
   <tr>
    <th style="text-align:left;"> L1_code </th>
    <th style="text-align:left;"> Pearson coefficient </th>
-   <th style="text-align:left;"> P-value </th>
+   <th style="text-align:left;"> 95% Conf. Interval </th>
   </tr>
  </thead>
 <tbody>
   <tr>
-   <td style="text-align:left;"> CHI </td>
-   <td style="text-align:left;"> 0.9387 </td>
-   <td style="text-align:left;"> 0 </td>
-  </tr>
-  <tr>
    <td style="text-align:left;"> GER </td>
-   <td style="text-align:left;"> 0.941 </td>
-   <td style="text-align:left;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> ARA </td>
-   <td style="text-align:left;"> 0.9164 </td>
-   <td style="text-align:left;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> TEL </td>
-   <td style="text-align:left;"> 0.9312 </td>
-   <td style="text-align:left;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> JPN </td>
-   <td style="text-align:left;"> 0.9338 </td>
-   <td style="text-align:left;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> KOR </td>
-   <td style="text-align:left;"> 0.9348 </td>
-   <td style="text-align:left;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> FRE </td>
-   <td style="text-align:left;"> 0.9346 </td>
-   <td style="text-align:left;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:left;"> HIN </td>
-   <td style="text-align:left;"> 0.9359 </td>
-   <td style="text-align:left;"> 0 </td>
+   <td style="text-align:left;"> 0.9410 </td>
+   <td style="text-align:left;"> (0.9387, 0.9432) </td>
   </tr>
   <tr>
    <td style="text-align:left;"> TUR </td>
    <td style="text-align:left;"> 0.9402 </td>
-   <td style="text-align:left;"> 0 </td>
+   <td style="text-align:left;"> (0.9379, 0.9425) </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> CHI </td>
+   <td style="text-align:left;"> 0.9387 </td>
+   <td style="text-align:left;"> (0.9363, 0.941) </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> HIN </td>
+   <td style="text-align:left;"> 0.9359 </td>
+   <td style="text-align:left;"> (0.9336, 0.938) </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> KOR </td>
+   <td style="text-align:left;"> 0.9348 </td>
+   <td style="text-align:left;"> (0.9322, 0.9373) </td>
   </tr>
   <tr>
    <td style="text-align:left;"> ITA </td>
    <td style="text-align:left;"> 0.9347 </td>
-   <td style="text-align:left;"> 0 </td>
+   <td style="text-align:left;"> (0.9321, 0.9373) </td>
   </tr>
   <tr>
    <td style="text-align:left;"> SPA </td>
    <td style="text-align:left;"> 0.9347 </td>
-   <td style="text-align:left;"> 0 </td>
+   <td style="text-align:left;"> (0.9322, 0.9371) </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> FRE </td>
+   <td style="text-align:left;"> 0.9346 </td>
+   <td style="text-align:left;"> (0.9321, 0.9371) </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> JPN </td>
+   <td style="text-align:left;"> 0.9338 </td>
+   <td style="text-align:left;"> (0.9311, 0.9365) </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> TEL </td>
+   <td style="text-align:left;"> 0.9312 </td>
+   <td style="text-align:left;"> (0.9287, 0.9336) </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> ARA </td>
+   <td style="text-align:left;"> 0.9164 </td>
+   <td style="text-align:left;"> (0.9132, 0.9195) </td>
   </tr>
 </tbody>
 </table>
+
+```r
+#correlations plot
+ggplot(zipf_loess_cor) +
+  labs(title = "Pearson coefficients for Zipf and loess estimates with 95% CIs",
+       x = "Language code", y = "Correlation") + 
+  geom_point(aes(L1_code, cor_val)) + 
+  geom_segment(aes(x = L1_code, y = cor_CI_lower, xend = L1_code, yend = cor_CI_upper), color = "#6495ed")
+```
+
+![](toefl_zipfs_part2_files/figure-html/loess estimates x zipf estimates correlation table-1.png)<!-- -->
 
